@@ -1,4 +1,4 @@
-import { models, model, Schema, Types } from 'mongoose'
+import { models, model, Schema } from 'mongoose'
 
 const PlantSchema: Schema = new Schema({
   species: {
@@ -13,6 +13,6 @@ const PlantSchema: Schema = new Schema({
   }
 })
 
-const Plant = models.Plant || model<PlantDocument>('Plant', PlantSchema)
+const Plant = models.Plant || model('Plant', PlantSchema)
 
 export default Plant

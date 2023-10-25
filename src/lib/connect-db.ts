@@ -1,4 +1,4 @@
-import mongoose from 'mongoose'
+import Mongoose from 'mongoose'
 
 const { MONGODB_URI } = process.env
 if (!MONGODB_URI) throw new Error('MONGODB_URI is not defined in environment.')
@@ -9,7 +9,7 @@ if (!cached) cached = global.mongoose = { conn: null }
 const connectMongo = async () => {
   if (cached.conn) return cached.conn
 
-  cached.conn = await mongoose.connect(MONGODB_URI)
+  cached.conn = await Mongoose.connect(MONGODB_URI)
   
   return cached.conn
 }
