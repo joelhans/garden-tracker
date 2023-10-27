@@ -28,10 +28,16 @@ spec:
     spec:
       containers:
         - name: api
-          image: ttl.sh/77a7672c-afbc-4aae-9f14-5f50d87aeb42:4h
+          image: ttl.sh/<YOUR_IMAGE_UUID>:1h
           ports:
             - name: http
               containerPort: 3000
+          env:
+            - name: MONGODB_URI
+              valueFrom:
+                secretKeyRef:
+                  name: garden-tracker-mongodb-plants-db-user
+                  key: connectionString.standardSrv
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -41,7 +47,7 @@ metadata:
 spec:
   ingressClassName: ngrok
   rules:
-    - host: sought-simple-turkey.ngrok-free.app
+    - host: <YOUR_NGROK_DOMAIN>
       http:
         paths:
           - path: /
@@ -51,3 +57,48 @@ spec:
                 name: garden-tracker
                 port:
                   number: 80
+---
+apiVersion: mongodbcommunity.mongodb.com/v1
+kind: MongoDBCommunity
+metadata:
+  name: garden-tracker-mongodb
+  namespace: ngrok-ingress-controller
+spec:
+  members: 1
+  type: ReplicaSet
+  version: "6.0.5"
+  security:
+    authentication:
+      modes: ["SCRAM"]
+  users:
+    - name: db-user
+      db: admin
+      passwordSecretRef:
+        name: db-user-password
+      roles:
+        - name: clusterAdmin
+          db: admin
+        - name: userAdminAnyDatabase
+          db: admin
+        - name: readWriteAnyDatabase
+          db: admin
+      scramCredentialsSecretName: my-scram
+    - name: db-user
+      db: plants
+      passwordSecretRef:
+        name: db-user-password
+      roles:
+        - name: readWrite
+          db: plants
+      scramCredentialsSecretName: my-scram
+  additionalMongodConfig:
+    storage.wiredTiger.engineConfig.journalCompressor: zlib
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: db-user-password
+  namespace: ngrok-ingress-controller
+type: Opaque
+stringData:
+  password: <YOUR_DB_PASSWORD>
